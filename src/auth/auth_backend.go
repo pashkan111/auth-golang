@@ -2,13 +2,14 @@ package auth
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
 
-var secretKey = []byte("SECRET")
+var secretKey = []byte(os.Getenv("SECRET_KEY"))
 
 type Token string
 

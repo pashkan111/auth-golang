@@ -1,33 +1,30 @@
 package repository
 
-import "github.com/jackc/pgx"
+import (
+	"context"
+
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type RepoInterface interface {
-	SetRefreshToken(refreshToken string) error
+	SetRefreshToken(refreshToken string, userID uuid.UUID) error
 	GetRefreshToken(refreshToken string) (RefreshToken, error)
 }
 
 type DatabaseRepo struct {
-	conn *pgx.Conn
+	Conn *mongo.Client
 }
 
-func (database *DatabaseRepo) SetRefreshToken(refreshToken string) error {
-	_, err := database.conn.Exec("INSERT INTO refresh_tokens (token) VALUES ($1)", refreshToken)
+func (database *DatabaseRepo) SetRefreshToken(refreshToken string, userID uuid.UUID) error {
+	collection := database.Conn.Database("auth_db").Collection("refresh_tokens")
+	_, err := collection.InsertOne(context.Background(), RefreshToken{Token: refreshToken, UserID: userID})
 	return err
 }
 
 func (database *DatabaseRepo) GetRefreshToken(refreshToken string) (RefreshToken, error) {
-	token_row, err := database.conn.Query("SELECT * FROM refresh_tokens WHERE token = $1", refreshToken)
+	collection := database.Conn.Database("auth_db").Collection("refresh_tokens")
 	var token RefreshToken
-	if err != nil {
-		return token, err
-	}
-
-	for token_row.Next() {
-		err = token_row.Scan(&token.Token, &token.UserID)
-		if err != nil {
-			return token, err
-		}
-	}
-	return token, nil
+	result := collection.FindOne(context.Background(), RefreshToken{Token: refreshToken}).Decode(&token)
+	return token, result
 }
