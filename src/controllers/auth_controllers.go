@@ -77,6 +77,7 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 		writer.Write(response_raw)
 		return
 	}
+
 	isValid := auth.ValidateTokensPair(auth.Token(tokens.AccessToken), auth.Token(tokens.RefreshToken))
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -86,18 +87,20 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 		return
 	}
 
-	refreshTokenFromDb, get_token_err := controller.Repo.GetRefreshToken(tokens.RefreshToken)
+	tokenFromDb, get_token_err := controller.Repo.GetRefreshToken(tokens.RefreshToken)
 
 	if get_token_err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		response := BaseResponse{Message: "Error getting refresh token"}
+		writer.WriteHeader(http.StatusBadRequest)
+		response := BaseResponse{Message: "Such token does not exist. Generate new pair"}
 		response_raw, _ := json.Marshal(response)
 		writer.Write(response_raw)
 		return
 	}
-	if refreshTokenFromDb.Token != tokens.RefreshToken {
+
+	userId, _ := auth.GetUserIdFromToken(auth.Token(tokens.RefreshToken))
+	if userId != tokenFromDb.UserID {
 		writer.WriteHeader(http.StatusBadRequest)
-		response := BaseResponse{Message: "Such token does not exist. Generate new pair"}
+		response := BaseResponse{Message: "Invalid Refresh Token"}
 		response_raw, _ := json.Marshal(response)
 		writer.Write(response_raw)
 		return

@@ -19,7 +19,7 @@ func Db() *mongo.Client {
 	port, _ := strconv.Atoi(os.Getenv("MONGO_PORT"))
 	host := os.Getenv("MONGO_HOST")
 	connectionString := fmt.Sprintf("mongodb://%s:%d", host, port)
-	fmt.Println(connectionString)
+
 	clientOptions := options.Client().ApplyURI(connectionString)
 	client, connect_err := mongo.Connect(context.Background(), clientOptions)
 	if connect_err != nil {

@@ -116,3 +116,11 @@ func GenerateTokens(userID uuid.UUID) (*UserTokens, error) {
 		RefreshToken: refreshToken,
 	}, nil
 }
+
+func GetUserIdFromToken(token Token) (uuid.UUID, error) {
+	claims, err := ValidateToken(token)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return claims.UserID, nil
+}
