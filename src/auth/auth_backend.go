@@ -34,13 +34,21 @@ func GenerateAccessToken(userID, tokenAssociation uuid.UUID) (Token, error) {
 		TokenAssociation: tokenAssociation,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	signedToken, err := token.SignedString(secretKey)
 	if err != nil {
 		return "", err
 	}
 
 	return Token(signedToken), nil
+}
+
+func GenerateAccessTokenByRefresh(refreshToken Token) (Token, error) {
+	refreshClaims, err := ValidateToken(refreshToken)
+	if err != nil {
+		return "", err
+	}
+	return GenerateAccessToken(refreshClaims.UserID, refreshClaims.TokenAssociation)
 }
 
 func GenerateRefreshToken(userID, tokenAssociation uuid.UUID) (Token, error) {
@@ -53,7 +61,8 @@ func GenerateRefreshToken(userID, tokenAssociation uuid.UUID) (Token, error) {
 		TokenAssociation: tokenAssociation,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
 	signedToken, err := token.SignedString(secretKey)
 	if err != nil {
 		return "", err

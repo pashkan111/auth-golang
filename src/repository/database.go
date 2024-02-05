@@ -12,6 +12,10 @@ type RepoInterface interface {
 	GetRefreshToken(refreshToken string) (RefreshToken, error)
 }
 
+type RefreshTokenFilter struct {
+	token string
+}
+
 type DatabaseRepo struct {
 	Conn *mongo.Client
 }
@@ -25,6 +29,6 @@ func (database *DatabaseRepo) SetRefreshToken(refreshToken string, userID uuid.U
 func (database *DatabaseRepo) GetRefreshToken(refreshToken string) (RefreshToken, error) {
 	collection := database.Conn.Database("auth_db").Collection("refresh_tokens")
 	var token RefreshToken
-	result := collection.FindOne(context.Background(), RefreshToken{Token: refreshToken}).Decode(&token)
-	return token, result
+	err := collection.FindOne(context.Background(), RefreshTokenFilter{token: refreshToken}).Decode(&token)
+	return token, err
 }
