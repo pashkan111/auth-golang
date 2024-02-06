@@ -51,7 +51,7 @@ func (controller *AuthController) GenerateTokens(writer http.ResponseWriter, rea
 		return
 	}
 
-	response := BaseResponse{Data: RefreshTokensReqResp{RefreshToken: string(tokens.RefreshToken), AccessToken: string(tokens.AccessToken)}, Message: ""}
+	response := BaseResponse{Data: RefreshTokensResponse{RefreshToken: string(tokens.RefreshToken), AccessToken: string(tokens.AccessToken)}, Message: ""}
 	responseRaw, _ := json.Marshal(response)
 	writer.Write(responseRaw)
 	return

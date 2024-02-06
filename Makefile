@@ -4,3 +4,6 @@ start:
 
 stop: 
 	docker-compose down
+
+test:
+	go test ./src/tests
