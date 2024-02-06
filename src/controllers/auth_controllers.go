@@ -9,16 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type BaseResponse struct {
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-}
-
-type RefreshTokensReqResp struct {
-	RefreshToken string `json:"refresh_token"`
-	AccessToken  string `json:"access_token"`
-}
-
 type AuthController struct {
 	Repo repository.RepoInterface
 }
@@ -29,8 +19,8 @@ func (controller *AuthController) GenerateTokens(writer http.ResponseWriter, rea
 	if userIdFromRequest == "" {
 		writer.WriteHeader(http.StatusBadRequest)
 		response := BaseResponse{Message: "Field user_id is required"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -38,8 +28,8 @@ func (controller *AuthController) GenerateTokens(writer http.ResponseWriter, rea
 	if parse_err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		response := BaseResponse{Message: "User ID is not valid UUID"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -47,8 +37,8 @@ func (controller *AuthController) GenerateTokens(writer http.ResponseWriter, rea
 	if generate_err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		response := BaseResponse{Message: "Error generating tokens"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -56,25 +46,25 @@ func (controller *AuthController) GenerateTokens(writer http.ResponseWriter, rea
 	if set_error != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		response := BaseResponse{Message: "Error setting refresh token"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
 	response := BaseResponse{Data: RefreshTokensReqResp{RefreshToken: string(tokens.RefreshToken), AccessToken: string(tokens.AccessToken)}, Message: ""}
-	response_raw, _ := json.Marshal(response)
-	writer.Write(response_raw)
+	responseRaw, _ := json.Marshal(response)
+	writer.Write(responseRaw)
 	return
 }
 
 func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, reader *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	var tokens RefreshTokensReqResp
+	var tokens RefreshTokensRequest
 	decoder := json.NewDecoder(reader.Body)
 	if err := decoder.Decode(&tokens); err != nil {
 		response := BaseResponse{Message: "Invalid JSON format"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -82,8 +72,8 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
 		response := BaseResponse{Message: "Invalid tokens pair"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -92,8 +82,8 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 	if get_token_err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		response := BaseResponse{Message: "Such token does not exist. Generate new pair"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -101,8 +91,8 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 	if userId != tokenFromDb.UserID {
 		writer.WriteHeader(http.StatusBadRequest)
 		response := BaseResponse{Message: "Invalid Refresh Token"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
@@ -110,13 +100,13 @@ func (controller *AuthController) RefreshTokens(writer http.ResponseWriter, read
 	if generate_err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		response := BaseResponse{Message: "Error generating new access token"}
-		response_raw, _ := json.Marshal(response)
-		writer.Write(response_raw)
+		responseRaw, _ := json.Marshal(response)
+		writer.Write(responseRaw)
 		return
 	}
 
-	response := BaseResponse{Data: RefreshTokensReqResp{AccessToken: string(newAccessToken), RefreshToken: tokens.RefreshToken}, Message: ""}
-	response_raw, _ := json.Marshal(response)
-	writer.Write(response_raw)
+	response := BaseResponse{Data: RefreshTokensResponse{AccessToken: string(newAccessToken), RefreshToken: tokens.RefreshToken}, Message: ""}
+	responseRaw, _ := json.Marshal(response)
+	writer.Write(responseRaw)
 	return
 }
