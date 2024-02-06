@@ -24,6 +24,7 @@ type DatabaseRepo struct {
 
 func (database *DatabaseRepo) SetRefreshToken(refreshToken string, userID uuid.UUID) error {
 	collection := database.Conn.Database("auth_db").Collection("refresh_tokens")
+	collection.DeleteOne(context.Background(), bson.D{{"user_id", userID}})
 	_, err := collection.InsertOne(context.Background(), RefreshToken{Token: refreshToken, UserID: userID})
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +35,6 @@ func (database *DatabaseRepo) SetRefreshToken(refreshToken string, userID uuid.U
 func (database *DatabaseRepo) GetRefreshToken(refreshToken string) (RefreshToken, error) {
 	collection := database.Conn.Database("auth_db").Collection("refresh_tokens")
 	var token RefreshToken
-	filter := bson.D{{"token", refreshToken}}
-	err := collection.FindOne(context.Background(), filter).Decode(&token)
+	err := collection.FindOne(context.Background(), bson.D{{"token", refreshToken}}).Decode(&token)
 	return token, err
 }
